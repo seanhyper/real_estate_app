@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, TextField, Typography, Card, CardContent, Box, AppBar, Toolbar, IconButton, Menu, MenuItem } from '@mui/material';
+import { Button, TextField, Typography, Card, CardContent, Box, AppBar, Toolbar, IconButton, Menu, MenuItem, Radio, RadioGroup, FormControlLabel, FormLabel } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
@@ -17,6 +17,7 @@ function App() {
     threshold: '',
     highestTeamOffer: '',
     costPerInquiry: '',
+    atOrBt: 'AT', // Default to AT
   });
   const [anchorEl, setAnchorEl] = useState(null);
 
@@ -43,6 +44,7 @@ function App() {
       highestTeamOffer: Number(formData.highestTeamOffer),
       offerDistribution: { min: 900000, max: 1300000 },
       costPerInquiry: Number(formData.costPerInquiry),
+      atOrBt: formData.atOrBt, // Pass AT or BT choice
     };
 
     const res = await fetch('http://localhost:5000/calculateBestOption', {
@@ -127,6 +129,19 @@ function App() {
               value={formData.costPerInquiry}
               onChange={handleInputChange}
             />
+
+            {/* AT or BT Selection */}
+            <FormLabel component="legend">AT or BT Criteria</FormLabel>
+            <RadioGroup
+              row
+              name="atOrBt"
+              value={formData.atOrBt}
+              onChange={handleInputChange}
+            >
+              <FormControlLabel value="AT" control={<Radio />} label="Above Threshold (AT)" />
+              <FormControlLabel value="BT" control={<Radio />} label="Below Threshold (BT)" />
+            </RadioGroup>
+
             <Button
               variant="contained"
               color="primary"
