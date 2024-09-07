@@ -1,9 +1,8 @@
-// src/MainApp.js
-
 import React, { useState } from 'react';
 import { Button, TextField, Typography, Card, CardContent, Box, AppBar, Toolbar, IconButton, Menu, MenuItem, RadioGroup, FormControlLabel, Radio, Select, MenuItem as SelectItem, InputLabel, FormControl } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useNavigate } from 'react-router-dom';  // Import useNavigate
 
 const offersData = [
   { name: 'Seller 1', offer: 1500000 },
@@ -24,6 +23,8 @@ function MainApp() {
     distributionType: 'uniform',
   });
   const [anchorEl, setAnchorEl] = useState(null);
+
+  const navigate = useNavigate();  // Initialize useNavigate for redirection
 
   const handleMenuClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -76,6 +77,10 @@ function MainApp() {
     const result = await res.json();
     setResponse(result.recommendation);
     setOffersChartData(result.offers.map((value, index) => ({ name: `Offer ${index + 1}`, value })));
+  };
+
+  const redirectToSimulationForm = () => {
+    navigate('/simulation-form');  // Redirect to the simulation form page
   };
 
   return (
@@ -230,6 +235,13 @@ function MainApp() {
             </CardContent>
           </Card>
         </Box>
+      </Box>
+
+      {/* Redirect Button */}
+      <Box sx={{ textAlign: 'center', marginTop: 4 }}>
+        <Button variant="contained" color="secondary" onClick={redirectToSimulationForm}>
+          Go to Simulation Form
+        </Button>
       </Box>
     </>
   );

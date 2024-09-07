@@ -34,4 +34,4 @@ def calculate_best_response(current_offer, threshold, highest_team_offer, offer_
         net_gain = current_offer - expected_benefit - cost_per_inquiry
         decision = "Continue searching for better offers." if net_gain < 0 and current_offer > threshold else "Stop and accept the current offer."
 
-    return decision, offers.tolist()  # Returning the decision and offers for charting
+    return decision, offers.tolist()
