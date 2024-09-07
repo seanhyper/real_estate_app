@@ -1,7 +1,9 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LoginRegisterPage from './LoginRegisterPage';
-import MainApp from './MainApp'; // Import your main app component
+import MainApp from './MainApp';
+import SimulationForm from './SimulationForm';
+import SimulationResult from './SimulationResult';
 
 function App() {
   return (
@@ -9,6 +11,8 @@ function App() {
       <Routes>
         <Route path="/" element={<LoginRegisterPage />} />
         <Route path="/main" element={<MainApp />} />
+        <Route path="/simulation-form" element={<SimulationForm />} />
+        <Route path="/simulation-result" element={<SimulationResult />} />
       </Routes>
     </Router>
   );

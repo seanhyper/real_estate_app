@@ -1,7 +1,9 @@
 from flask import Flask, request, jsonify, session
 from flask_cors import CORS
 import sqlite3
-from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.security import check_password_hash
+
+from backend.agents.decision_engine import run_simulation
 from backend.business_logic import calculate_best_response
 
 app = Flask(__name__)
@@ -9,6 +11,8 @@ app.secret_key = 'supersecretkey'
 CORS(app)  # Enable CORS for all routes
 
 users_db = {}
+# Agent storage (in-memory for now)
+agents = {}
 
 
 # Database connection
@@ -24,25 +28,19 @@ def add_project_data():
     return jsonify({"message": "Project data added successfully"}), 201
 
 
-@app.route('/register', methods = ['POST'])
-def register():
+@app.route('/register', methods=['POST'])
+def register_agent():
     data = request.json
     username = data.get('username')
     password = data.get('password')
 
-    # Validate input
-    if not username or not password:
-        return jsonify({"message": "Username and password are required"}), 400
+    # Simple registration logic
+    if username in agents:
+        return jsonify({"message": "Username already exists"}), 409
 
-    if username in users_db:
-        return jsonify({"message": "Username already taken"}), 409
-
-    # Use 'pbkdf2:sha256' as the hashing method
-    hashed_password = generate_password_hash(password, method = 'pbkdf2:sha256')
-
-    # Save user to in-memory store
-    users_db[username] = hashed_password
-    return jsonify({"message": "Registration successful"}), 201
+    # Add agent to in-memory storage
+    agents[username] = {'password': password, 'data': {}}
+    return jsonify({"message": "Agent registered"}), 201
 
 
 @app.route('/login', methods=['POST'])
@@ -127,3 +125,32 @@ def calculate_best_option():
 
     # Return recommendation along with the generated offers for charting
     return jsonify({"recommendation": recommendation, "offers": offers}), 200
+
+
+@app.route('/start_simulation', methods = ['POST'])
+def start_simulation():
+    data = request.json
+
+    # Extract simulation parameters
+    num_agents = int(data.get('num_agents', 3))
+    # Generate agent data
+    agents = [
+        {
+            'id': i + 1,
+            'strategy': 'random',
+            'threshold': int(data.get('threshold')),
+            'cost_per_inquiry': int(data.get('cost_per_inquiry')),
+            'at_or_bt': data.get("at_or_bt", "AT"),
+            'distribution_type': data.get("distribution_type", "uniform")
+        } for i in range(num_agents)
+    ]
+
+    simulation_data = {
+        'agents': agents,
+        'rounds': int(data.get("rounds", 5))
+    }
+
+    # Run the simulation
+    result = run_simulation(simulation_data)
+
+    return jsonify(result), 200
