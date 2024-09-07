@@ -1,4 +1,4 @@
-from backend.api import app  # Importing the Flask app from your api.py file
+from api import app  # Importing the Flask app from your api.py file
 
 if __name__ == "__main__":
     # Running the Flask development server

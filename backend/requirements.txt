@@ -3,3 +3,4 @@ Flask-Cors==3.0.10
 SQLAlchemy==1.4.23
 numpy==1.21.0
 werkzeug==3.0.4
+scipy==1.13.1
