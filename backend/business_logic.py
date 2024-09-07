@@ -1,48 +1,37 @@
 import numpy as np
-from scipy.stats import uniform
 
 
-def calculate_best_response(current_offer, threshold, highest_team_offer, offer_distribution, cost_per_inquiry,
-                            reservation_value, AT=True):
+def calculate_best_response(current_offer, threshold, highest_team_offer, offer_distribution, cost_per_inquiry, distribution_type, at_or_bt):
     """
-    Calculate the best strategy for the seller based on reservation value, team contributions, and AT/BT criteria.
-
-    Parameters:
-        current_offer: The current best offer received by the seller.
-        threshold: The threshold value for deciding participation in the information-sharing process (ISP).
-        highest_team_offer: The highest offer found by other team members.
-        offer_distribution: A dictionary containing min and max values for potential future offers.
-        cost_per_inquiry: The cost incurred by reaching out to new buyers.
-        reservation_value: The reservation value used by the seller to decide whether to stop or continue.
-        AT: Boolean indicating whether Above Threshold (AT) or Below Threshold (BT) logic is used.
+    Calculate the best strategy for the seller based on current data.
     """
-    # Unpack offer distribution data
-    min_offer = offer_distribution['min']
-    max_offer = offer_distribution['max']
+    min_offer = offer_distribution.get('min', 900000)
+    max_offer = offer_distribution.get('max', 1300000)
 
-    # Define a uniform probability distribution (could be customized further)
-    offer_dist = uniform(loc = min_offer, scale = (max_offer - min_offer))
-
-    # Simulate 1000 future offers
-    future_offers = offer_dist.rvs(1000)
+    # Generate offers based on the selected distribution type
+    if distribution_type == 'uniform':
+        offers = np.random.uniform(min_offer, max_offer, 1000)
+    elif distribution_type == 'normal':
+        mean = (min_offer + max_offer) / 2
+        stddev = (max_offer - min_offer) / 4  # Approximate stddev
+        offers = np.random.normal(mean, stddev, 1000)
+        offers = np.clip(offers, min_offer, max_offer)  # Ensure values stay within bounds
+    elif distribution_type == 'exponential':
+        scale = (max_offer - min_offer) / 2  # Approximate scale
+        offers = np.random.exponential(scale, 1000) + min_offer
+        offers = np.clip(offers, min_offer, max_offer)  # Ensure values stay within bounds
+    else:
+        return "Invalid distribution type", []
 
     # Calculate expected benefit of continuing to search
-    expected_benefit = np.mean([max(offer, highest_team_offer) for offer in future_offers])
+    expected_benefit = np.mean([max(offer, highest_team_offer) for offer in offers])
 
-    # Calculate the net gain of continuing
-    net_gain = expected_benefit - current_offer - cost_per_inquiry
+    # Calculate the net gain of continuing based on AT or BT criteria
+    if at_or_bt:  # AT criteria logic
+        net_gain = expected_benefit - current_offer - cost_per_inquiry
+        decision = "Continue searching for better offers." if net_gain > 0 and current_offer < threshold else "Stop and accept the current offer."
+    else:  # BT criteria logic
+        net_gain = current_offer - expected_benefit - cost_per_inquiry
+        decision = "Continue searching for better offers." if net_gain < 0 and current_offer > threshold else "Stop and accept the current offer."
 
-    # Decision Logic
-    if AT:
-        # Apply Above Threshold (AT) criteria: Continue if net gain > 0 and current offer is less than threshold
-        if net_gain > 0 and current_offer < threshold:
-            return "Continue searching for better offers."
-        else:
-            return "Stop and accept the current offer."
-    else:
-        # Apply Below Threshold (BT) criteria: Stop contributing but benefit from others' findings
-        if current_offer >= reservation_value:
-            return "Stop and accept the current offer."
-        else:
-            return "Contribute to team findings (BT criteria)."
-
+    return decision, offers.tolist()  # Returning the decision and offers for charting
