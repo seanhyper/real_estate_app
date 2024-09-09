@@ -5,8 +5,8 @@ def calculate_best_response(current_offer, threshold, highest_team_offer, offer_
     """
     Calculate the best strategy for the seller based on current data.
     """
-    min_offer = offer_distribution.get('min', 900000)
-    max_offer = offer_distribution.get('max', 1300000)
+    min_offer = offer_distribution.get('min')
+    max_offer = offer_distribution.get('max')
 
     # Generate offers based on the selected distribution type
     if distribution_type == 'uniform':
@@ -29,9 +29,21 @@ def calculate_best_response(current_offer, threshold, highest_team_offer, offer_
     # Calculate the net gain of continuing based on AT or BT criteria
     if at_or_bt:  # AT criteria logic
         net_gain = expected_benefit - current_offer - cost_per_inquiry
-        decision = "Continue searching for better offers." if net_gain > 0 and current_offer < threshold else "Stop and accept the current offer."
+        if net_gain > 0:
+            if current_offer < threshold:
+                decision = "Stop. didnt find any offer the exceeds the threshold"
+            else:
+                decision = "Stop and accept the current offer."
+        else:
+            decision = "Continue searching for better offers."
+
     else:  # BT criteria logic
         net_gain = current_offer - expected_benefit - cost_per_inquiry
-        decision = "Continue searching for better offers." if net_gain < 0 and current_offer > threshold else "Stop and accept the current offer."
-
+        if net_gain > 0:
+            if current_offer > threshold:
+                decision = "Stop. didnt find any offer the exceeds the threshold"
+            else:
+                decision = "Stop and accept the current offer."
+        else:
+            decision = "Continue searching for better offers."
     return decision, offers.tolist()

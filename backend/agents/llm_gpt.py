@@ -1,4 +1,6 @@
 import os
+import random
+
 import openai
 
 from dotenv import load_dotenv
@@ -13,31 +15,37 @@ if openai.api_key is None:
 client = openai.OpenAI()
 
 
-class Agent:
-    def __init__(self, agent_id, strategy):
+class BuyerAgent:
+    def __init__(self, agent_id):
         self.agent_id = agent_id
-        self.strategy = strategy
+        self.risk_tolerance = random.choice(['low', 'medium', 'high'])
 
-    def make_decision(self, current_offer, threshold, cost_per_inquiry):
-        # Generate reasoning using LLM
-        reasoning = self.get_reasoning(current_offer, threshold)
+    def get_decision_prompt(self, current_price, initial_price):
+        # Adding a random element to simulate changing market conditions or agent mood
+        prompt = (
+            f"based on dutch auction strategy. Agent {self.agent_id} with a {self.risk_tolerance} risk tolerance is considering a property initially listed at {initial_price} "
+            f"The current offer is {current_price}. "
+            f"should the agent accept the offer now, or wait for a possible further decrease in price? a clear 'yes' or 'no'."
+        )
 
-        # Apply logic for search or settle
-        if current_offer < threshold - cost_per_inquiry:
-            return f"Agent {self.agent_id} is searching: {reasoning}"
-        else:
-            return f"Agent {self.agent_id} is settling: {reasoning}"
+        return prompt
 
-    def get_reasoning(self, current_offer, threshold):
-        # Use GPT-4 to generate reasoning for the decision
-        prompt = f"Agent {self.agent_id} is evaluating an offer of {current_offer} with a threshold of {threshold}. What should they do?"
+    def accepts_offer(self, price, initial):
+        # Call to OpenAI's API to generate a decision based on the current price
+        prompt = self.get_decision_prompt(price, initial)
         response = openai.chat.completions.create(
-            model = "gpt-4",
+            model = "gpt-3.5-turbo-16k",
             messages = [
                 {"role": "system", "content": "You are an intelligent agent making decisions based on offers."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens = 100
+            max_tokens = 20
         )
-        return response.choices[0].message.content.strip()
+        decision = response.choices[0].message.content.strip()
+        print(f"Agent {self.agent_id} decision: {decision}")  # Logging for debugging
+        # Interpret the response text to decide
+        return "yes" in decision.lower()
 
+
+def setup_agents(num_buyers):
+    return [BuyerAgent(agent_id = i) for i in range(num_buyers)]

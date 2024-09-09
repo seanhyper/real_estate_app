@@ -1,9 +1,14 @@
+from http.client import HTTPException
+
 from flask import Flask, request, jsonify, session
 from flask_cors import CORS
 import sqlite3
+
+from openai import BaseModel
 from werkzeug.security import check_password_hash
 
-from backend.agents.decision_engine import run_simulation
+from backend.agents.decision_engine import run_simulation, run_dutch_auction
+from backend.agents.llm_gpt import setup_agents
 from backend.business_logic import calculate_best_response
 
 app = Flask(__name__)
@@ -28,7 +33,7 @@ def add_project_data():
     return jsonify({"message": "Project data added successfully"}), 201
 
 
-@app.route('/register', methods=['POST'])
+@app.route('/register', methods = ['POST'])
 def register_agent():
     data = request.json
     username = data.get('username')
@@ -43,7 +48,7 @@ def register_agent():
     return jsonify({"message": "Agent registered"}), 201
 
 
-@app.route('/login', methods=['POST'])
+@app.route('/login', methods = ['POST'])
 def login():
     data = request.json
     username = data.get('username')
@@ -141,16 +146,38 @@ def start_simulation():
             'threshold': int(data.get('threshold')),
             'cost_per_inquiry': int(data.get('cost_per_inquiry')),
             'at_or_bt': data.get("at_or_bt", "AT"),
-            'distribution_type': data.get("distribution_type", "uniform")
+            'distribution_type': data.get("distribution_type", "uniform"),
         } for i in range(num_agents)
     ]
 
     simulation_data = {
         'agents': agents,
-        'rounds': int(data.get("rounds", 5))
+        'rounds': int(data.get("rounds", 5)),
+        'min': int(data.get("minValue")),
+        'max': int(data.get("maxValue")),
     }
 
     # Run the simulation
     result = run_simulation(simulation_data)
 
     return jsonify(result), 200
+
+
+class AuctionParameters(BaseModel):
+    initial_price: float
+    price_drop_percentage: float
+    num_weeks: int
+    num_buyers: int
+
+
+@app.route("/run-auction/", methods=["POST"])
+def process_auction():
+    data = request.get_json()
+    agents = setup_agents(int(data["numOfBuyers"]))
+    result = run_dutch_auction(
+        initial_price=float(data["initialPrice"]),
+        price_drop_percentage=float(data["priceDropPercentage"]),
+        num_weeks=int(data["numWeeks"]),
+        agents=agents
+    )
+    return jsonify(result)

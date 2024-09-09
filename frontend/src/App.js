@@ -4,6 +4,7 @@ import LoginRegisterPage from './LoginRegisterPage';
 import MainApp from './MainApp';
 import SimulationForm from './SimulationForm';
 import SimulationResult from './SimulationResult';
+import DutchAuctionForm from "./DutchAuctionForm";
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <Route path="/main" element={<MainApp />} />
         <Route path="/simulation-form" element={<SimulationForm />} />
         <Route path="/simulation-result" element={<SimulationResult />} />
+        <Route path="/run-auction" element={<DutchAuctionForm />} />
       </Routes>
     </Router>
   );
