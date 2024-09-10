@@ -1,250 +1,178 @@
 import React, { useState } from 'react';
-import { Button, TextField, Typography, Card, CardContent, Box, AppBar, Toolbar, IconButton, Menu, MenuItem, RadioGroup, FormControlLabel, Radio, Select, MenuItem as SelectItem, InputLabel, FormControl } from '@mui/material';
+import {
+    Box,
+    Typography,
+    Container,
+    Card,
+    CardContent,
+    AppBar,
+    Toolbar,
+    IconButton,
+    Menu,
+    MenuItem,
+    Grid,
+} from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { useNavigate } from 'react-router-dom';  // Import useNavigate
+import { useNavigate } from 'react-router-dom'; // For routing
+import { Bar, Line } from 'react-chartjs-2'; // Chart.js for visualizations
+import { useTheme } from '@mui/material/styles';
+import Logo from './logo.png'; // Placeholder logo
 
-const offersData = [
-  { name: 'Seller 1', offer: 1500000 },
-  { name: 'Seller 2', offer: 1200000 },
-  { name: 'Seller 3', offer: 1300000 },
-  { name: 'Seller 4', offer: 900000 },
-];
+// Setup for Chart.js
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    BarElement,
+    Title,
+    Tooltip,
+    Legend,
+    LineElement,
+    PointElement
+} from 'chart.js';
 
-function MainApp() {
-  const [response, setResponse] = useState('');
-  const [offersChartData, setOffersChartData] = useState([]);
-  const [formData, setFormData] = useState({
-    currentOffer: '',
-    threshold: '',
-    highestTeamOffer: '',
-    costPerInquiry: '',
-    atOrBt: 'AT',
-    distributionType: 'uniform',
-  });
-  const [anchorEl, setAnchorEl] = useState(null);
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, LineElement, PointElement);
 
-  const navigate = useNavigate();  // Initialize useNavigate for redirection
+function Dashboard() {
+    const [anchorEl, setAnchorEl] = useState(null); // Menu state
+    const theme = useTheme();
+    const navigate = useNavigate();
 
-  const handleMenuClick = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-  };
-
-  const handleDistributionChange = (e) => {
-    setFormData({
-      ...formData,
-      distributionType: e.target.value,
-    });
-  };
-
-  const handleAtBtChange = (e) => {
-    setFormData({
-      ...formData,
-      atOrBt: e.target.value,
-    });
-  };
-
-  const sendProjectData = async () => {
-    const data = {
-      currentOffer: Number(formData.currentOffer),
-      threshold: Number(formData.threshold),
-      highestTeamOffer: Number(formData.highestTeamOffer),
-      offerDistribution: { min: 900000, max: 1300000 },
-      costPerInquiry: Number(formData.costPerInquiry),
-      atOrBt: formData.atOrBt,
-      distributionType: formData.distributionType,
+    const handleMenuClick = (event) => {
+        setAnchorEl(event.currentTarget);
     };
 
-    const res = await fetch('http://localhost:5000/calculateBestOption', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
-    const result = await res.json();
-    setResponse(result.recommendation);
-    setOffersChartData(result.offers.map((value, index) => ({ name: `Offer ${index + 1}`, value })));
-  };
+    const handleMenuClose = () => {
+        setAnchorEl(null);
+    };
 
-  const redirectToSimulationForm = () => {
-    navigate('/simulation-form');  // Redirect to the simulation form page
-  };
+    const handleHomeClick = () => {
+        navigate('/');  // Redirect to the main endpoint
+    };
 
-  return (
-    <>
-      {/* Navigation Bar */}
-      <AppBar position="static" sx={{ backgroundColor: '#3f51b5' }}>
-        <Toolbar>
-          <IconButton edge="start" color="inherit" aria-label="menu" onClick={handleMenuClick}>
-            <MenuIcon />
-          </IconButton>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            Real Estate App
-          </Typography>
-          <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
-            <MenuItem onClick={handleMenuClose}>Home</MenuItem>
-            <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
-            <MenuItem onClick={handleMenuClose}>Settings</MenuItem>
-          </Menu>
-        </Toolbar>
-      </AppBar>
+    const handleSimulationFormClick = () => {
+        navigate('/simulation-form');
+    };
 
-      {/* Main Content Layout */}
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'flex-start',
-          padding: 4,
-          backgroundColor: '#f5f5f5',
-        }}
-      >
-        {/* Left: Form */}
-        <Card sx={{ maxWidth: 400, marginRight: 4, padding: 2 }}>
-          <CardContent>
-            <Typography variant="h4" gutterBottom>
-              Enter Project Data
-            </Typography>
-            <TextField
-              label="Current Offer"
-              variant="outlined"
-              name="currentOffer"
-              fullWidth
-              margin="normal"
-              value={formData.currentOffer}
-              onChange={handleInputChange}
-            />
-            <TextField
-              label="Threshold"
-              variant="outlined"
-              name="threshold"
-              fullWidth
-              margin="normal"
-              value={formData.threshold}
-              onChange={handleInputChange}
-            />
-            <TextField
-              label="Highest Team Offer"
-              variant="outlined"
-              name="highestTeamOffer"
-              fullWidth
-              margin="normal"
-              value={formData.highestTeamOffer}
-              onChange={handleInputChange}
-            />
-            <TextField
-              label="Cost per Inquiry"
-              variant="outlined"
-              name="costPerInquiry"
-              fullWidth
-              margin="normal"
-              value={formData.costPerInquiry}
-              onChange={handleInputChange}
-            />
+    const handleRunAuctionClick = () => {
+        navigate('/run-auction');
+    };
 
-            {/* AT or BT Criteria */}
-            <Typography variant="h6" sx={{ marginTop: 2 }}>
-              AT or BT Criteria
-            </Typography>
-            <RadioGroup name="atOrBt" value={formData.atOrBt} onChange={handleAtBtChange}>
-              <FormControlLabel value="AT" control={<Radio />} label="Above Threshold (AT)" />
-              <FormControlLabel value="BT" control={<Radio />} label="Below Threshold (BT)" />
-            </RadioGroup>
+    // Project status data
+    const projectStatusData = {
+        labels: ['Completed', 'Ongoing', 'At Risk'],
+        datasets: [
+            {
+                label: 'Projects',
+                data: [120, 45, 10], // Example data
+                backgroundColor: ['#4caf50', '#ff9800', '#f44336'],
+            },
+        ],
+    };
 
-            {/* Distribution Type */}
-            <FormControl fullWidth sx={{ marginTop: 2 }}>
-              <InputLabel id="distribution-select-label">Distribution Type</InputLabel>
-              <Select
-                labelId="distribution-select-label"
-                id="distributionType"
-                value={formData.distributionType}
-                label="Distribution Type"
-                onChange={handleDistributionChange}
-              >
-                <SelectItem value="uniform">Uniform</SelectItem>
-                <SelectItem value="normal">Normal (Gaussian)</SelectItem>
-                <SelectItem value="exponential">Exponential</SelectItem>
-              </Select>
-            </FormControl>
+    // Market trends data (for example, price trends over the months)
+    const marketTrendsData = {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
+        datasets: [
+            {
+                label: 'Market Price ($)',
+                data: [500000, 520000, 510000, 530000, 540000, 550000, 560000, 580000, 600000], // Example data
+                fill: false,
+                borderColor: '#42a5f5',
+                tension: 0.1,
+            },
+        ],
+    };
 
-            <Button
-              variant="contained"
-              color="primary"
-              fullWidth
-              sx={{ marginTop: 2 }}
-              onClick={sendProjectData}
-            >
-              Send Project Data
-            </Button>
-            <Typography variant="body1" color="textSecondary" sx={{ marginTop: 2 }}>
-              Backend Response: {response || 'No response yet'}
-            </Typography>
-          </CardContent>
-        </Card>
+    // Agent team status (team performance)
+    const agentTeamData = {
+        labels: ['Team A', 'Team B', 'Team C', 'Team D'],
+        datasets: [
+            {
+                label: 'Deals Closed',
+                data: [15, 20, 10, 25], // Example data
+                backgroundColor: '#3f51b5',
+            },
+            {
+                label: 'Active Projects',
+                data: [5, 3, 7, 2], // Example data
+                backgroundColor: '#ff9800',
+            },
+        ],
+    };
 
-        {/* Right: Charts */}
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {/* Offer Distribution Chart */}
-          <Card sx={{ maxWidth: 600, padding: 2 }}>
-            <CardContent>
-              <Typography variant="h5" gutterBottom>
-                Offer Distribution
-              </Typography>
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={offersChartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="value" fill="#8884d8" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+    return (
+        <Box sx={{ height: '100vh', backgroundColor: '#f4f6f8' }}>
+            {/* App Bar */}
+            <AppBar position="static" sx={{ backgroundColor: '#3f51b5' }}>
+                <Toolbar>
+                    <IconButton
+                        edge="start"
+                        color="inherit"
+                        aria-label="menu"
+                        onClick={handleMenuClick}
+                    >
+                        <MenuIcon />
+                    </IconButton>
+                    <Typography variant="h6" sx={{ flexGrow: 1 }}>
+                        Real Estate Dashboard
+                    </Typography>
+                    <Box sx={{ flexGrow: 1 }} />
+                    <img src={Logo} alt="Logo" style={{ width: 40, height: 40 }} />
+                    <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
+                        <MenuItem onClick={handleHomeClick}>Home</MenuItem>
+                        <MenuItem onClick={handleSimulationFormClick}>Simulation Form</MenuItem>
+                        <MenuItem onClick={handleRunAuctionClick}>Run Auction</MenuItem>
+                    </Menu>
+                </Toolbar>
+            </AppBar>
 
-          {/* Bar Chart of Current Offers */}
-          <Card sx={{ maxWidth: 600, padding: 2 }}>
-            <CardContent>
-              <Typography variant="h5" gutterBottom>
-                Current Offers from Other Sellers
-              </Typography>
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={offersData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="offer" fill="#8884d8" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+            {/* Main Dashboard Content */}
+            <Container maxWidth="lg" sx={{ mt: 4 }}>
+                <Grid container spacing={4}> {/* Increased spacing here */}
+                    {/* Project Status Overview */}
+                    <Grid item xs={12} md={6} sx={{ mt: 2 }}> {/* Added top margin */}
+                        <Card sx={{ p: 2, boxShadow: 5, backgroundColor: 'white', borderRadius: 3, height: '100%' }}>
+                            <CardContent>
+                                <Typography variant="h6" align="center" gutterBottom>
+                                    Project Status
+                                </Typography>
+                                <Box sx={{ width: '100%' }}>
+                                    <Bar data={projectStatusData} />
+                                </Box>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+
+                    {/* Market Trends */}
+                    <Grid item xs={12} md={6} sx={{ mt: 2 }}> {/* Added top margin */}
+                        <Card sx={{ p: 2, boxShadow: 5, backgroundColor: 'white', borderRadius: 3, height: '100%' }}>
+                            <CardContent>
+                                <Typography variant="h6" align="center" gutterBottom>
+                                    Market Trends
+                                </Typography>
+                                <Box sx={{ width: '100%' }}>
+                                    <Line data={marketTrendsData} />
+                                </Box>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+
+                    {/* Agent Team Status */}
+                    <Grid item xs={12} sx={{ mt: 3 }}> {/* Increased margin top for more space */}
+                        <Card sx={{ p: 2, boxShadow: 5, backgroundColor: 'white', borderRadius: 3 }}>
+                            <CardContent>
+                                <Typography variant="h6" align="center" gutterBottom>
+                                    Agent Teams Performance
+                                </Typography>
+                                <Bar data={agentTeamData} />
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                </Grid>
+            </Container>
         </Box>
-      </Box>
-
-      {/* Redirect Button */}
-      <Box sx={{ textAlign: 'center', marginTop: 4 }}>
-        <Button variant="contained" color="secondary" onClick={redirectToSimulationForm}>
-          Go to Simulation Form
-        </Button>
-      </Box>
-    </>
-  );
+    );
 }
 
-export default MainApp;
+export default Dashboard;

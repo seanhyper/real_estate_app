@@ -31,6 +31,7 @@ import {
     Cell
 } from 'recharts';
 import MenuIcon from '@mui/icons-material/Menu';
+import { useNavigate } from 'react-router-dom';  // Import useNavigate
 import Logo from './logo.png';  // Assuming you have a logo
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];  // Color scheme for the pie chart
@@ -43,6 +44,7 @@ function SimulationResult() {
     const [anchorEl, setAnchorEl] = useState(null);
     const [finalStates, setFinalStates] = useState([]);
 
+    const navigate = useNavigate();  // Initialize navigate
 
     useEffect(() => {
         // Retrieve simulation result from localStorage
@@ -99,6 +101,18 @@ function SimulationResult() {
         setAnchorEl(null);
     };
 
+    const handleHomeClick = () => {
+        navigate('/main');  // Redirect to the main endpoint
+    };
+
+    const handleSimulationFormClick = () => {
+        navigate('/simulation-form');  // Redirect to the simulation form page
+    };
+
+    const handleRunAuctionClick = () => {
+        navigate('/run-auction');  // Redirect to the run auction page
+    };
+
     const currentData = simulationData[currentRound] || {actions: []};
 
     const offerDistributionData = currentData.actions.map((agent, idx) => ({
@@ -118,9 +132,9 @@ function SimulationResult() {
                         Real Estate App
                     </Typography>
                     <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
-                        <MenuItem onClick={handleMenuClose}>Home</MenuItem>
-                        <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
-                        <MenuItem onClick={handleMenuClose}>Settings</MenuItem>
+                        <MenuItem onClick={handleHomeClick}>Home</MenuItem>
+                        <MenuItem onClick={handleSimulationFormClick}>Simulation Form</MenuItem>
+                        <MenuItem onClick={handleRunAuctionClick}>Run Auction</MenuItem>
                     </Menu>
                 </Toolbar>
             </AppBar>

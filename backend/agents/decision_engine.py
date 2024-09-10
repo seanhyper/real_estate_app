@@ -80,10 +80,8 @@ def run_dutch_auction(initial_price, price_drop_percentage, num_weeks, agents):
     for week in range(num_weeks):
         for agent in agents:
             if agent.accepts_offer(current_price, initial_price):
-                return {"final_price": current_price, "week_sold": week, "agent_id": agent.agent_id}
+                return {"final_price": current_price, "week_sold": week + 1, "agent_id": agent.agent_id}
         current_price *= (1 - price_drop_percentage / 100)
+
     return {"final_price": current_price, "week_sold": num_weeks, "agent_id": None}
-
-
-
 

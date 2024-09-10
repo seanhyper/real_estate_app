@@ -5,7 +5,7 @@ from flask_cors import CORS
 import sqlite3
 
 from openai import BaseModel
-from werkzeug.security import check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from backend.agents.decision_engine import run_simulation, run_dutch_auction
 from backend.agents.llm_gpt import setup_agents
@@ -27,10 +27,8 @@ def get_db_connection():
     return connection
 
 
-@app.route('/addProjectData', methods = ['POST'])
-def add_project_data():
-    data = request.json
-    return jsonify({"message": "Project data added successfully"}), 201
+# In-memory database for users
+users_db = {}
 
 
 @app.route('/register', methods = ['POST'])
@@ -39,13 +37,16 @@ def register_agent():
     username = data.get('username')
     password = data.get('password')
 
-    # Simple registration logic
-    if username in agents:
+    if username in users_db:
         return jsonify({"message": "Username already exists"}), 409
 
-    # Add agent to in-memory storage
-    agents[username] = {'password': password, 'data': {}}
-    return jsonify({"message": "Agent registered"}), 201
+    # Hash the password before storing it
+    hashed_password = generate_password_hash(password)
+
+    # Store the user with hashed password in users_db
+    users_db[username] = hashed_password
+
+    return jsonify({"message": "Agent registered successfully"}), 201
 
 
 @app.route('/login', methods = ['POST'])
@@ -54,12 +55,13 @@ def login():
     username = data.get('username')
     password = data.get('password')
 
-    # Simple user authentication check
+    # Check if user exists
     if username in users_db:
         stored_hash = users_db[username]
 
-        # Compare the entered password with the stored hashed password
+        # Check if the provided password matches the stored hash
         if check_password_hash(stored_hash, password):
+            session['user_id'] = username  # Log the user in by storing their username in the session
             return jsonify({"message": "Login successful"}), 200
         else:
             return jsonify({"message": "Invalid username or password"}), 401
@@ -67,38 +69,27 @@ def login():
         return jsonify({"message": "Invalid username or password"}), 401
 
 
-# Adding a project for the user
-@app.route('/projects', methods = ['POST'])
-def add_project():
+@app.route('/logout', methods = ['POST'])
+def logout():
+    session.clear()
+    return jsonify({"message": "Logged out successfully"}), 200
+
+
+# Example protected route (only accessible to logged-in users)
+@app.route('/projects', methods = ['POST', 'GET'])
+def manage_projects():
     if 'user_id' not in session:
-        return jsonify({"message": "Unauthorized"}), 401
+        return jsonify({"message": "Unauthorized"}), 401  # Unauthorized access
 
-    data = request.json
-    project_name = data.get('project_name')
+    if request.method == 'POST':
+        data = request.json
+        project_name = data.get('project_name')
 
-    connection = get_db_connection()
-    cursor = connection.cursor()
+        # Store the project for the user (for now, just returning it as a success message)
+        return jsonify({"message": f"Project '{project_name}' added successfully for {session['user_id']}."}), 201
 
-    cursor.execute('INSERT INTO projects (user_id, project_name) VALUES (?, ?)', (session['user_id'], project_name))
-    connection.commit()
-    connection.close()
-
-    return jsonify({"message": "Project added successfully"}), 201
-
-
-# Fetch all projects for the logged-in user
-@app.route('/projects', methods = ['GET'])
-def get_projects():
-    if 'user_id' not in session:
-        return jsonify({"message": "Unauthorized"}), 401
-
-    connection = get_db_connection()
-    cursor = connection.cursor()
-
-    projects = cursor.execute('SELECT * FROM projects WHERE user_id = ?', (session['user_id'],)).fetchall()
-    connection.close()
-
-    return jsonify([dict(project) for project in projects]), 200
+    if request.method == 'GET':
+        return jsonify({"message": f"Returning projects for {session['user_id']}."}), 200
 
 
 @app.route('/calculateBestOption', methods = ['POST'])
@@ -170,14 +161,14 @@ class AuctionParameters(BaseModel):
     num_buyers: int
 
 
-@app.route("/run-auction/", methods=["POST"])
+@app.route("/run-auction/", methods = ["POST"])
 def process_auction():
     data = request.get_json()
     agents = setup_agents(int(data["numOfBuyers"]))
     result = run_dutch_auction(
-        initial_price=float(data["initialPrice"]),
-        price_drop_percentage=float(data["priceDropPercentage"]),
-        num_weeks=int(data["numWeeks"]),
-        agents=agents
+        initial_price = float(data["initialPrice"]),
+        price_drop_percentage = float(data["priceDropPercentage"]),
+        num_weeks = int(data["numWeeks"]),
+        agents = agents
     )
     return jsonify(result)

@@ -25,14 +25,14 @@ import Logo from './logo.png';  // Import a logo or use a placeholder image
 
 function SimulationForm() {
     const [formData, setFormData] = useState({
-        num_agents: 3,
-        threshold: 1000000,
+        num_agents: 10,
+        threshold: 800000,
         cost_per_inquiry: 10000,
-        rounds: 3,
+        rounds: 10,
         atOrBt: 'AT', // Default to AT
         distributionType: 'uniform', // Default to Uniform distribution
-        minValue: 0,
-        maxValue: 0
+        minValue: 500000,
+        maxValue: 2000000
     });
 
     const [anchorEl, setAnchorEl] = useState(null);  // For managing the dropdown menu
@@ -52,6 +52,18 @@ function SimulationForm() {
             ...formData,
             [name]: value,
         });
+    };
+
+    const handleHomeClick = () => {
+        navigate('/main');  // Redirect to the main endpoint
+    };
+
+    const handleSimulationFormClick = () => {
+        navigate('/simulation-form');  // Redirect to the simulation form page
+    };
+
+    const handleRunAuctionClick = () => {
+        navigate('/run-auction');  // Redirect to the run auction page
     };
 
     const handleAtBtChange = (e) => {
@@ -98,9 +110,9 @@ function SimulationForm() {
                         Real Estate App
                     </Typography>
                     <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
-                        <MenuItem onClick={handleMenuClose}>Home</MenuItem>
-                        <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
-                        <MenuItem onClick={handleMenuClose}>Settings</MenuItem>
+                        <MenuItem onClick={handleHomeClick}>Home</MenuItem>
+                        <MenuItem onClick={handleSimulationFormClick}>Simulation Form</MenuItem>
+                        <MenuItem onClick={handleRunAuctionClick}>Run Auction</MenuItem>
                     </Menu>
                 </Toolbar>
             </AppBar>
