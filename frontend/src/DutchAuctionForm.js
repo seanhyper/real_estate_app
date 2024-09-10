@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
     Box,
     TextField,
@@ -23,9 +23,10 @@ import {
     MenuItem,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import { useTheme } from '@mui/material/styles';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate for routing
+import {useTheme} from '@mui/material/styles';
+import {useNavigate} from 'react-router-dom'; // Import useNavigate for routing
 import Logo from './logo.png'; // Assuming you have a logo file
+import AIImage from './ai_image.png'; // Import the AI image
 
 function DutchAuctionForm() {
     const [formData, setFormData] = useState({
@@ -119,22 +120,25 @@ function DutchAuctionForm() {
         return (
             <List>
                 <ListItem>
-                    <ListItemText primary="Agent ID" secondary={dialogContent.agent_id !== undefined ? dialogContent.agent_id : 'N/A'} />
+                    <ListItemText primary="Agent ID"
+                                  secondary={dialogContent.agent_id !== undefined ? dialogContent.agent_id : 'N/A'}/>
                 </ListItem>
                 <ListItem>
-                    <ListItemText primary="Final Price" secondary={dialogContent.final_price !== undefined ? dialogContent.final_price : 'N/A'} />
+                    <ListItemText primary="Final Price"
+                                  secondary={dialogContent.final_price !== undefined ? dialogContent.final_price : 'N/A'}/>
                 </ListItem>
                 <ListItem>
-                    <ListItemText primary="Week Sold" secondary={dialogContent.week_sold !== undefined ? dialogContent.week_sold : 'N/A'} />
+                    <ListItemText primary="Week Sold"
+                                  secondary={dialogContent.week_sold !== undefined ? dialogContent.week_sold : 'N/A'}/>
                 </ListItem>
             </List>
         );
     };
 
     return (
-        <Box sx={{ height: '100vh', backgroundColor: '#f4f6f8' }}>
+        <Box sx={{height: '100vh', backgroundColor: '#f4f6f8'}}>
             {/* App Bar */}
-            <AppBar position="static" sx={{ backgroundColor: '#3f51b5' }}>
+            <AppBar position="static" sx={{backgroundColor: '#3f51b5'}}>
                 <Toolbar>
                     <IconButton
                         edge="start"
@@ -142,24 +146,25 @@ function DutchAuctionForm() {
                         aria-label="menu"
                         onClick={handleMenuClick}
                     >
-                        <MenuIcon />
+                        <MenuIcon/>
                     </IconButton>
-                    <Typography variant="h6" sx={{ flexGrow: 1 }}>
+                    <Typography variant="h6" sx={{flexGrow: 1}}>
                         Dutch Auction System
                     </Typography>
-                    <Box sx={{ flexGrow: 1 }} />
-                    <img src={Logo} alt="Logo" style={{ width: 40, height: 40 }} />
+                    <Box sx={{flexGrow: 1}}/>
+                    <img src={Logo} alt="Logo" style={{width: 40, height: 40}}/>
                     <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
                         <MenuItem onClick={handleHomeClick}>Home</MenuItem> {/* Redirect to Home */}
-                        <MenuItem onClick={handleSimulationFormClick}>Simulation Form</MenuItem> {/* Redirect to Simulation Form */}
+                        <MenuItem onClick={handleSimulationFormClick}>Simulation
+                            Form</MenuItem> {/* Redirect to Simulation Form */}
                         <MenuItem onClick={handleRunAuctionClick}>Run Auction</MenuItem> {/* Redirect to Run Auction */}
                     </Menu>
                 </Toolbar>
             </AppBar>
 
             {/* Main Form */}
-            <Container component="main" maxWidth="sm" sx={{ mt: 8 }}>
-                <Card sx={{ p: 4, boxShadow: 5, backgroundColor: 'white', borderRadius: 3 }}>
+            <Container component="main" maxWidth="sm" sx={{mt: 8}}>
+                <Card sx={{p: 4, boxShadow: 5, backgroundColor: 'white', borderRadius: 3}}>
                     <CardContent>
                         <Typography
                             component="h1"
@@ -177,7 +182,7 @@ function DutchAuctionForm() {
                                 e.preventDefault();
                                 handleSubmit();
                             }}
-                            sx={{ mt: 2 }}
+                            sx={{mt: 2}}
                         >
                             <TextField
                                 margin="normal"
@@ -228,10 +233,10 @@ function DutchAuctionForm() {
                                 fullWidth
                                 variant="contained"
                                 color="primary"
-                                sx={{ mt: 3, mb: 2 }}
+                                sx={{mt: 3, mb: 2}}
                                 disabled={loading}
                             >
-                                {loading ? <CircularProgress size={24} /> : 'Start Auction'}
+                                {loading ? <CircularProgress size={24}/> : 'Start Auction'}
                             </Button>
                         </Box>
                     </CardContent>
@@ -243,13 +248,17 @@ function DutchAuctionForm() {
                 open={open}
                 onClose={handleDialogClose}
                 PaperProps={{
-                    style: { width: '400px', padding: '20px' },
+                    style: {width: '400px', padding: '20px'},
                 }}
             >
                 <DialogTitle>{"Auction Results"}</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
                         {renderDialogContent()}
+                        {/* AI Image added here */}
+                        <Box sx={{textAlign: 'center'}}>
+                            <img src={AIImage} alt="AI Agent" style={{width: 100, marginBottom: 20}}/>
+                        </Box>
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
