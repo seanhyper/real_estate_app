@@ -1,5 +1,22 @@
 import React, {useState, useEffect} from 'react';
-import {Typography, Box, Card, CardContent, AppBar, Toolbar, IconButton, Menu, MenuItem} from '@mui/material';
+import {
+    Typography,
+    Box,
+    Card,
+    CardContent,
+    AppBar,
+    Toolbar,
+    IconButton,
+    Menu,
+    MenuItem,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Paper
+} from '@mui/material';
 import {
     BarChart,
     Bar,
@@ -14,6 +31,7 @@ import {
     Cell
 } from 'recharts';
 import MenuIcon from '@mui/icons-material/Menu';
+import { useNavigate } from 'react-router-dom';  // Import useNavigate
 import Logo from './logo.png';  // Assuming you have a logo
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];  // Color scheme for the pie chart
@@ -24,6 +42,9 @@ function SimulationResult() {
     const [highestOffers, setHighestOffers] = useState([]);
     const [currentRound, setCurrentRound] = useState(0);
     const [anchorEl, setAnchorEl] = useState(null);
+    const [finalStates, setFinalStates] = useState([]);
+
+    const navigate = useNavigate();  // Initialize navigate
 
     useEffect(() => {
         // Retrieve simulation result from localStorage
@@ -51,15 +72,26 @@ function SimulationResult() {
 
     useEffect(() => {
         const result = JSON.parse(localStorage.getItem('simulationResult'));
-        if (result) {
+        if (result && result.simulation_results) {
             setSimulationData(result.simulation_results);
             const offersData = Object.entries(result.highest_offers).map(([agentId, offer]) => ({
                 name: `Agent ${agentId}`,
                 value: offer
             }));
             setHighestOffers(offersData);
+            extractFinalStates(result.simulation_results);
         }
     }, []);
+
+    const extractFinalStates = (simulationResults) => {
+        const lastActions = simulationResults.reduce((acc, round) => {
+            round.actions.forEach(action => {
+                acc[action.agent_id] = action;  // This always writes the latest action for each agent
+            });
+            return acc;
+        }, {});
+        setFinalStates(Object.values(lastActions));
+    };
 
     const handleMenuClick = (event) => {
         setAnchorEl(event.currentTarget);
@@ -67,6 +99,18 @@ function SimulationResult() {
 
     const handleMenuClose = () => {
         setAnchorEl(null);
+    };
+
+    const handleHomeClick = () => {
+        navigate('/main');  // Redirect to the main endpoint
+    };
+
+    const handleSimulationFormClick = () => {
+        navigate('/simulation-form');  // Redirect to the simulation form page
+    };
+
+    const handleRunAuctionClick = () => {
+        navigate('/run-auction');  // Redirect to the run auction page
     };
 
     const currentData = simulationData[currentRound] || {actions: []};
@@ -88,9 +132,9 @@ function SimulationResult() {
                         Real Estate App
                     </Typography>
                     <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
-                        <MenuItem onClick={handleMenuClose}>Home</MenuItem>
-                        <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
-                        <MenuItem onClick={handleMenuClose}>Settings</MenuItem>
+                        <MenuItem onClick={handleHomeClick}>Home</MenuItem>
+                        <MenuItem onClick={handleSimulationFormClick}>Simulation Form</MenuItem>
+                        <MenuItem onClick={handleRunAuctionClick}>Run Auction</MenuItem>
                     </Menu>
                 </Toolbar>
             </AppBar>
@@ -120,22 +164,32 @@ function SimulationResult() {
                 ))}
             </Box>
 
-            {/* Bar Chart */}
-            {currentData.actions.length > 0 && (
-                <Box sx={{marginTop: 4}}>
-                    <Typography variant="h5">Offer Distribution</Typography>
-                    <ResponsiveContainer width="100%" height={400}>
-                        <BarChart data={offerDistributionData}>
-                            <CartesianGrid strokeDasharray="3 3"/>
-                            <XAxis dataKey="name"/>
-                            <YAxis/>
-                            <Tooltip/>
-                            <Legend/>
-                            <Bar dataKey="value" fill="#8884d8"/>
-                        </BarChart>
-                    </ResponsiveContainer>
-                </Box>
-            )}
+            {/* Ensure this Box wraps both the Typography and TableContainer for alignment */}
+            <Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'center', maxWidth: 650, margin: 'auto'}}>
+                <Typography variant="h5" sx={{alignSelf: 'flex-start', mb: 2}}>Final States of Agents</Typography>
+                <TableContainer component={Paper}>
+                    <Table aria-label="final states table">
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>Agent ID</TableCell>
+                                <TableCell align="right">Final Decision</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {finalStates.map((agentAction, index) => (
+                                <TableRow key={index}>
+                                    <TableCell component="th" scope="row">
+                                        Agent {agentAction.agent_id}
+                                    </TableCell>
+                                    <TableCell align="right">
+                                        {agentAction.decision}
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            </Box>
 
             {/* Pie Chart for Settling Rounds */}
             {settlingData.length > 0 && (
@@ -156,17 +210,17 @@ function SimulationResult() {
                 </Box>
             )}
 
-              {/* Bar Chart to Display the Highest Offers */}
-            <Box sx={{ marginTop: 4 }}>
+            {/* Bar Chart to Display the Highest Offers */}
+            <Box sx={{marginTop: 4}}>
                 <Typography variant="h5">Highest Offers by Agents</Typography>
                 <ResponsiveContainer width="100%" height={400}>
                     <BarChart data={highestOffers}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
-                        <Bar dataKey="value" fill="#8884d8" />
+                        <CartesianGrid strokeDasharray="3 3"/>
+                        <XAxis dataKey="name"/>
+                        <YAxis domain={['dataMin - 200000', 'dataMax + 200000']}/>
+                        <Tooltip/>
+                        <Legend/>
+                        <Bar dataKey="value" fill="#8884d8"/>
                     </BarChart>
                 </ResponsiveContainer>
             </Box>

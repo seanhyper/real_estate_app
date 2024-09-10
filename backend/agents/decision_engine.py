@@ -5,10 +5,11 @@ from backend.business_logic import calculate_best_response
 MIN = 500000
 MAX = 1700000
 
+
 def run_simulation(data):
     agents = []
     results = []
-    offer_distribution = {"min": MIN, "max": MAX}
+    offer_distribution = {"min": data.get("min", MIN), "max": data.get("max", MAX)}
     highest_offers = {}  # Dictionary to keep track of the highest offer per agent
 
     # Initialize agents with given parameters
@@ -35,7 +36,7 @@ def run_simulation(data):
             if agent['settled']:
                 continue
 
-            current_offer = np.random.randint(MIN, MAX)
+            current_offer = np.random.randint(offer_distribution.get("min"), offer_distribution.get("max"))
             decision, offers = calculate_best_response(
                 current_offer = current_offer,
                 threshold = agent['threshold'],
@@ -43,7 +44,7 @@ def run_simulation(data):
                 offer_distribution = offer_distribution,
                 cost_per_inquiry = agent['cost_per_inquiry'],
                 distribution_type = agent['distribution_type'],
-                at_or_bt = agent['at_or_bt']
+                at_or_bt = agent['at_or_bt'],
             )
 
             # Update the highest offer for the agent if the current offer is greater
@@ -58,7 +59,7 @@ def run_simulation(data):
             }
             round_result["actions"].append(action)
 
-            if decision == "Stop and accept the current offer.":
+            if "Stop" in decision:
                 agent['settled'] = True
                 agent['settling_round'] = round
 
@@ -72,3 +73,15 @@ def run_simulation(data):
         "settling_rounds": {agent['id']: agent['settling_round'] for agent in agents},
         "highest_offers": highest_offers  # Include the highest offers in the simulation return data
     }
+
+
+def run_dutch_auction(initial_price, price_drop_percentage, num_weeks, agents):
+    current_price = initial_price
+    for week in range(num_weeks):
+        for agent in agents:
+            if agent.accepts_offer(current_price, initial_price):
+                return {"final_price": current_price, "week_sold": week + 1, "agent_id": agent.agent_id}
+        current_price *= (1 - price_drop_percentage / 100)
+
+    return {"final_price": current_price, "week_sold": num_weeks, "agent_id": None}
+
